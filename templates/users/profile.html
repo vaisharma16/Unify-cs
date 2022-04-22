@@ -1,0 +1,102 @@
+{% extends "users/navigation.html" %}
+
+{% load static %} 
+{% block cssfiles %} 
+<link rel="stylesheet" href="{% static 'profile_style.css' %}">
+{% endblock cssfiles %}  
+    
+{% block content %}
+    <div class="container">
+        <div class="header">
+            <div class="profile-image">
+                <a href="{{ u.profile.image.url }}">
+                    <img src="{{ u.profile.image.url }}"/>
+                </a>
+            </div>
+            <div class="profile">
+                <h3>{{u.first_name}} {{u.last_name}}</h3>
+                <h3>@{{ u }}</h3>
+                {% if bio %}
+                    <p>{{ bio }}</p>
+                    <!-- {% for words in bio.split %}
+                        <p>{{ words }}</p>
+                    {% endfor %} -->
+                {% else %}
+                    <p>No bio!</p>
+                {% endif %}
+                {% if u.profile.Institute_Name != " " %}
+                    <p>{{ u.profile.Institute_Name}}</p>
+                {% endif %}
+                {% if u.profile.Institute_Area != " " %}
+                    <p>{{ u.profile.Institute_Area}}</p>
+                {% endif %}
+                {% if u.profile.phone != 0 %}
+                    <p>{{ u.profile.phone}}</p>
+                {% endif %}
+                    
+                <br>
+                <span><a href=""><b>{{ post_count }}</b> posts</a></span>
+                {% if request.user == u %}
+                    <span><a href="{% url 'friend_list' %}"><b>{{ u.profile.friends.count }}</b> friends</a></span>
+                {% else %}
+                    <span>{{ u.profile.friends.count }} Friends</span>
+                {% endif %}
+
+                <div class="body">
+                    <div class="user">
+                        {% if request.user == u %}
+                            <a class="btn" href="{% url 'edit-profile' %}">Edit Profile</a>
+                        {% endif %}
+                    </div>
+                        
+                    {% if request.user != u %}
+                    <div class="friends">
+                        {% if button_status == 'not_friend' %}
+                            <a class="btn" href="/users/friend_request/send/{{ u.id }}">Add Friend</a>
+                        {% elif button_status == 'friend_request_sent' %}
+                            <a class="btn btn-warning" href="/users/friend_request/cancel/{{ u.id }}">Cancel Request</a>
+                        {% elif button_status == 'friend_request_received' %}
+                            <a class="btn" href="/users/friend_request/accept/{{ u.id }}">Accept Request</a>     
+                            <a class="btn" href="/users/friend_request/delete/{{ u.id }}">Reject Request</a>  
+                        {% else %}
+                        <a class="btn btn-danger" href="/users/friend/delete/{{ u.id }}">UnFriend</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <br>
+        <br>
+        <br>
+        <hr>
+        {% if request.user == u %}
+        <div class="posts">
+            {% for post in posts %}
+                <div class="post">
+                    <a href="{% url 'post-detail' post.id %}"><img src="{{post.pic.url}}" alt=""></a>
+                    <br><br>
+                </div>
+            {% endfor %}
+        </div>
+        {% elif p in request.user.profile.friends.all %}
+        <div class="posts">
+            {% for post in user_posts %}
+                <div class="post">
+                    <a href="#"><img src="{{post.pic.url}}" alt=""></a>
+                    <br><br>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="posts">
+            <h4>Please follow this user to view their posts!</h4>
+        </div>
+        {% endif %}
+
+	</div>
+
+    </div>
+{% endblock content %} 
+{% block jsfiles %}{% endblock jsfiles %}

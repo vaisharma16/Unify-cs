@@ -1,0 +1,138 @@
+{% extends "users/navigation.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block cssfiles %}
+<link rel="stylesheet" href="{% static 'style.css' %}">
+{% endblock cssfiles %}
+
+{% block content %}
+	<div class="middle" id="middle-container">
+		<div class="feeds">
+			<div class="feed">
+				<div class="head">
+					<div class="user">
+						<div class="profile-photo">
+							<img src="{{post.username.profile.image.url}}" alt="">
+						</div>
+						<div class="info">
+							<a href="{{ post.username.profile.get_absolute_url }}" style="text-decoration: none; color: var(--color-primary);"><h3>{{post.username}}</h3></a>
+							<small>{{post.date_posted}}</small>
+						</div>
+					</div>
+					{% if user == post.username %}
+						<span class="edit">
+							<a style="color: black;" href="{% url 'post-update' post.id %}"><i class="uil uil-edit"></i></a>
+						</span>
+					{% endif %}	
+				</div>
+				<!--FEED's IMAGE SECTION-->
+				<div class="photo">
+					<a href="{{ post.pic.url }}"><img src="{{ post.pic.url }}" alt="#"></a>
+				</div>
+			</div>
+		</div>
+		<!-- Comments Section -->
+		<div class="comments-section">
+			<div class="header-post">
+				<!--FEED's ACTION CENTER-->
+				<div class="action-button">
+					<div class="interaction-buttons">
+						<button class="btn like" id="{{post.id}}">
+							{% if post in liked_post %}
+								<a href="{% url 'post-like' %}" style="color:red;" id="likebtn{{post.id}}"> Unlike </a> 
+							{% else %}
+								<a href="{% url 'post-like' %}" style="color:green;" id="likebtn{{post.id}}"> Like </a>
+							{% endif %}
+						</button>
+					</div>
+					<!--FEED's liked by Section-->
+					<div id="count">
+						{% if post.likes.count >= 2 %}
+							<p><b>{{post.likes.count}} likes</b></p>
+						{% elif post.likes.count == 1 %}
+							<p><b>{{post.likes.count}} like</b></p>
+						{% else %}
+							<p><b>No likes yet!</b></p>
+						{% endif %}
+					</div>
+					{% if user == post.username %}
+						<div class="bookmark">
+							<a href="{% url 'post-delete' post.id %}"><i class="uil uil-image-times"></i></a>
+						</div>
+					{% endif %}
+				</div>
+				<!--FEED's Caption-->
+				{% if post.description %}
+					<div class="caption">
+						<p><b>{{post.username}}</b> {{post.description}}</p>
+					</div>
+				{% endif %}
+				<!-- tags -->
+				{% if post.tags %}
+					<p><b><i>{{post.tags}}</i></b></p>
+				{% endif %}
+				<div class="create">
+					<form class="comment-form" method = "POST">
+						{% csrf_token %}
+						<fieldset class="form-group"><br>
+							{{ form|crispy }}
+						</fieldset>
+						<div class="form-group">
+							<button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Comment</button><br>
+						</div>
+					</form>
+				</div>
+				<br>
+			</div>
+			<h3>Comments</h3>
+			<div class="comment-scroll">
+				{% if post.details.count == 0 %}
+					<p><b>No comments yet!</b></p>
+				{% else %}
+					{% for comments in post.details.all %}
+						<div class="comment-post">
+							<div class="liked-by">
+								<span><img src="{{comments.username.profile.image.url}}" alt=""></span>
+								<h3>{{comments.username}}</h3>
+							</div>
+							<div class="comment">
+								<p>{{comments.comment_date}}</p>
+								<h3>{{comments.comment}}</h3>
+							</div>
+						</div>
+					{% endfor %}
+				{% endif %}
+			</div>
+		</div>	
+	</div>
+	    
+	    				
+	    			
+	  
+{% endblock content %}
+{% block jsfiles %}
+<script>
+	$(".like").click(function (e) {
+    var id = this.id;
+    var href = $('.like').find('a').attr('href');
+    e.preventDefault();
+
+    $.ajax({
+        url: href,
+        data: {
+          'likeId': id
+        },
+        success: function(response){
+          if(response.liked){
+            $('#likebtn' + id).html("Unlike | {{post.likes.count}}");
+            $('#likebtn' + id).css("color", "red")
+          }
+          else{
+            $('#likebtn' + id).html("Like | {{post.likes.count}}");
+            $('#likebtn' + id).css("color", "green")
+          }
+        }
+      })
+});
+</script>
+{% endblock jsfiles %}

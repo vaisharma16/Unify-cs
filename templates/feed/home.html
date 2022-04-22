@@ -1,0 +1,425 @@
+{% load static %}
+{% load crispy_forms_tags %}
+{% block cssfiles %}
+<!-- Css Link -->
+<link rel="stylesheet" href="{% static 'style.css' %}">
+{% endblock cssfiles %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unify - Connecting Students</title>
+    <!-- Unicons iconscout Link-->
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+</head>
+<body id="body">
+    <!--------------------------- Navigation Section ------------------------------>
+    <nav>
+        <div class="container">
+            <h2 class="log">Unify</h2>
+            <form class="searchbar" class="profile"
+                action="{% url 'search_users' %}"
+                method="get">
+                <i class="uil uil-search"></i>
+                <input name ='q' type="search" placeholder="Search for Friends, Fellow Students, Teachers....">
+            </form>
+            <div class="create">
+                <a class= "btn btn-primary" style= "color: white;" for="create post" href="{% url 'post-create' %}">Create</a>
+                <a class="profile-photo" href="{% url 'my_profile' %}">
+                    <img src="{{request.user.profile.image.url}}" alt="#">
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!--------------------------- Main Section --------------------->
+    <main>
+        <div class="container">
+            <!---------------------- Left Section------------------>
+            <div class="left">
+                <a class="profile" href="{% url 'my_profile' %}">
+                    <div class="profile-photo">
+                        <img src="{{request.user.profile.image.url}}" alt="">
+                    </div>
+
+                    <div class="handle">
+                        <h3 style ="color: var(--color-primary);">{{request.user.first_name}} {{request.user.last_name}}</h3>
+                        <h4 style="color:gray;">@{{request.user.username}}</h4>
+                    </div>
+                </a>
+            
+
+            <!------------------- SIDEBAR ---------------------------->
+            <div class="sidebar">
+                <a class ="menu-item active">
+                    <span><i class="uil uil-home"></i></span>
+                    <h3>Home</h3>
+                </a>
+
+                <a class="menu-item explore" href = "{% url 'explore' %}">
+                    <span><i class="uil uil-compass"></i></span>
+                    <h3>Explore</h3>
+                </a>
+
+                <a class="menu-item" id="notifications" href = "{% url 'friend_list' %}">
+                    <span><i class="uil uil-users-alt"><small class="notifications-count">{{ request.user.profile.friends.count }}</small></i></span>
+                    <h3>Friends</h3>
+                </a>
+
+                <a class="menu-item" id="messages-notifications" id="direct" href="{% url 'inbox' %}">
+                    <span><i class="uil uil-envelopes"><small class="notifications-count"> {{count}}</small></i></span>
+                    <h3>Messages</h3>
+                </a>
+
+                <a class="menu-item" id="notifications" href= "{% url 'notifications' %}">
+                    <i class="uil uil-bell"></i>
+                    <h3>Notifications</h3>
+                </a>
+
+                <a class="menu-item" id="theme">
+                    <span><i class="uil uil-palette"></i></span>
+                    <h3>Theme</h3>
+                </a>
+                
+                <a class="menu-item" id="logout" href="{% url 'logout' %}"  style="text-decoration: none;">
+                    <span><i class="uil uil-signout"></i></span>
+                    <h3 class='logout'>logout</h3>
+                </a>
+            </div>
+
+            <!---------------------- END OF SIDEBAR -------------------------->
+            <a class="btn btn-primary" for="Create Post" style="text-decoration: none; color: white" href="{% url 'post-create' %}">Create Post</a>
+
+        </div>
+
+            <!-------------------- Middle Section ------------------------->
+            <div class="middle">
+                <!-------------------------- FEED ------------------------------>
+                <div class="feeds" id="feeds">
+                    {% for post in posts %} 
+                    {% if post.username|slugify in friends %}
+                    <div class="feed">
+                        <div class="head">
+                            <div class="user">
+                                <div class="profile-photo">
+                                    <a href="{{ post.username.profile.get_absolute_url }}">
+                                        <img src="{{post.username.profile.image.url}}" alt="">
+                                    </a>
+                                </div>
+                                <div class="info">
+                                    <a href="{{ post.username.profile.get_absolute_url }}" style="text-decoration: none; color: var(--color-primary);"><h3>{{post.username}}</h3></a>
+                                    <small>{{post.date_posted}}</small>
+                                </div>
+                            </div>
+                            {% if post.username|slugify == request.user.username %}
+                            <span class="edit">
+                                <a href="{% url 'post-update' post.id %}"><i class="uil uil-ellipsis-h"></i></a>
+                            </span>
+                            {% endif %}
+                                
+                        </div>
+                        <!--FEED's IMAGE SECTION-->
+                        <div class="photo">
+                            <a href="{% url 'post-detail' post.id %}"><img src="{{ post.pic.url }}" alt="#"></a>
+                        </div>
+                        <!--FEED's ACTION CENTER-->
+                        <div class="action-button">
+                            <div class="interaction-buttons">
+                                <button class="btn like" id="{{post.id}}">
+                                    {% if post in liked_post %}
+                                        <a href="{% url 'post-like' %}" style="color:red;" id="likebtn{{post.id}}"> Unlike </a> 
+                                    {% else %}
+                                        <a href="{% url 'post-like' %}" style="color:green;" id="likebtn{{post.id}}"> Like </a>
+                                    {% endif %}
+                                </button>
+                                <a class="btn btn-outline-info" href="{% url 'post-detail' post.id %}">Comment</a>
+                            </div>
+                            {% if request.user.username == post.username|slugify %}
+                                <div class="bookmark">
+                                    <a href="{% url 'post-delete' post.id %}"><i class="uil uil-image-times"></i></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!--FEED's liked by Section-->
+                        <div id="count">
+                            {% if post.likes.count >= 2 %}
+                                <p><b>{{post.likes.count}} likes</b></p>
+                            {% elif post.likes.count == 1 %}
+                                <p><b>{{post.likes.count}} like</b></p>
+                            {% else %}
+                                <p><b>No likes yet!</b></p>
+                            {% endif %}
+                        </div>
+                        <!--FEED's Caption-->
+                        {% if post.description %}
+                            <div class="caption">
+                                <p><b>{{post.username}}</b> {{post.description}}</p>
+                            </div>
+                        {% endif %}
+                        <!-- tags -->
+                        {% if post.tags %}
+                            <p><b><i>{{post.tags}}</i></b></p>
+                        {% endif %}
+                        <!--FEED's Comment Section-->
+                        {% if post.details.count == 0 %}
+                            <p><b>No comments yet!</b></p>
+                        {% elif post.details.count <= 2 %}
+                            <hr>
+                            <h3>Comments</h3>
+                            {% for comments in post.details.all %}
+                                <div class="liked-by">
+                                    <span><img src="{{comments.username.profile.image.url}}" alt=""></span>
+                                    <h3>{{comments.username}}</h3>
+                                </div>
+                                <div class="comment">
+                                    <p>{{comments.comment_date}}</p>
+                                    <h3>{{comments.comment}}</h3>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if post.username|slugify == request.userusername %}
+                    <div class="feed">
+                        <div class="head">
+                            <div class="user">
+                                <div class="profile-photo">
+                                    <img src="{{post.username.profile.image.url}}" alt="">
+                                </div>
+                                <div class="info">
+                                    <a href="{{ post.username.profile.get_absolute_url }}" style="text-decoration: none; color: var(--color-primary);"><h3>{{post.username}}</h3></a>
+                                    <small>{{post.date_posted}}</small>
+                                </div>
+                            </div>
+                            {% if post.username|slugify == rquuest.user.username %}
+                            <span class="edit">
+                                <a href="{% url 'post-update' post.id %}"><i class="uil uil-ellipsis-h"></i></a>
+                            </span>
+                            {% endif %}
+                                
+                        </div>
+                        <!--FEED's IMAGE SECTION-->
+                        <div class="photo">
+                            <a href="{% url 'post-detail' post.id %}"><img src="{{ post.pic.url }}" alt="#"></a>
+                        </div>
+                        <!--FEED's ACTION CENTER-->
+                        <div class="action-button">
+                            <div class="interaction-buttons">
+                                <button class="btn like" id="{{post.id}}">
+                                    {% if post in liked_post %}
+                                        <a href="{% url 'post-like' %}" style="color:red;" id="likebtn{{post.id}}"> Unlike </a> 
+                                    {% else %}
+                                        <a href="{% url 'post-like' %}" style="color:green;" id="likebtn{{post.id}}"> Like </a>
+                                    {% endif %}
+                                </button>
+                                <a class="btn btn-outline-info" href="{% url 'post-detail' post.id %}">Comment</a>
+                            </div>
+                            {% if request.user == post.username %}
+                                <div class="bookmark">
+                                    <a href="{% url 'post-delete' post.id %}"><i class="uil uil-image-times"></i></a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <!--FEED's liked by Section-->
+                        <div id="count">
+                            {% if post.likes.count >= 2 %}
+                                <p><b>{{post.likes.count}} likes</b></p>
+                            {% elif post.likes.count == 1 %}
+                                <p><b>{{post.likes.count}} like</b></p>
+                            {% else %}
+                                <p><b>No likes yet!</b></p>
+                            {% endif %}
+                        </div>
+                        <!--FEED's Caption-->
+                        {% if post.description %}
+                            <div class="caption">
+                                <p><b>{{post.username}}</b> {{post.description}}</p>
+                            </div>
+                        {% endif %}
+                        <!-- tags -->
+                        {% if post.tags %}
+                            <p><b><i>{{post.tags}}</i></b></p>
+                        {% endif %}
+                        <!--FEED's Comment Section-->
+                        {% if post.details.count == 0 %}
+                            <p><b>No comments yet!</b></p>
+                        {% elif post.details.count <= 2 %}
+                            <hr>
+                            <h3>Comments</h3>
+                            {% for comments in post.details.all %}
+                                <div class="liked-by">
+                                    <span><img src="{{comments.username.profile.image.url}}" alt=""></span>
+                                    <h3>{{comments.username}}</h3>
+                                </div>
+                                <div class="comment">
+                                    <p>{{comments.comment_date}}</p>
+                                    <h3>{{comments.comment}}</h3>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-------------------- Right Section ------------------->
+            <div class="right">
+                <!------------------ MESSAGES SECTION ------------------>
+                <div class="messages">
+                    <div class="heading">
+                        <h4>Messages</h4><i class="uil uil-envelope-edit"></i>
+                    </div>
+                    <!--Searchbar for messages-->
+                    <div class="searchbar">
+                        <i class="uil uil-comment-search"></i>
+                        <input type="search" placeholder="Search Messages" id="message-search">
+                    </div>
+                    {% if m_count == 0 %}
+                    <h5>No messages yet !!</h5>
+                    {% else %}
+                    <!--MESSAGE-->
+                    {% for message in messages %}
+                    <a class="{% if active_direct == message.user.username %}is-active{% endif %}" href="{% url 'directs' message.user.username %}">
+                    <div class="message">
+                        
+                        <div class="profile-photo">
+                            <img src="{{ message.user.profile.image.url }}" alt="Placeholder image">
+                           
+                        </div>
+                        
+                        <div class="message-body">
+                            <h4>{{ message.user.first_name }} {{ message.user.last_name }}</h4>
+                            <!--READ MESSAGES ARE TEXT MUTED-->
+                            <p class="text-muted">{{ directs.body }} <p>
+                        </div>
+                        
+                    </div>
+                </a>
+                {% endfor %}
+                {% endif %}
+                    
+                    
+                   
+                <!--END OF MESSAGES-->
+
+                <!-------------------------- FRIEND REQUESTS ------------------------------>
+                <!-- <div class="friend-request">
+                    <h4>Requests</h4>
+                    {% for friend in friends %}
+                    <div class="request">
+                        <div class="info">
+                            <div class="profile-photo">
+                                <img src="{% static './images/photo5.png' %}" alt="">
+                            </div>
+                            <div>
+                                <h5>{{friend}}</h5>
+                                
+                                <p class="text-muted">
+                                    8 mutual friends
+                                </p>   
+                            </div>
+                        </div>
+                        <div class="action">
+                            <button class="btn btn-primary">
+                                Accept
+                            </button>
+                            <button class="btn">
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div> -->
+            <!--END OF RIGHT-->
+        </div>
+    </main>
+
+    <!-----------------------------THEME CUSTOMIZATIONS---------------------->
+    <div class="customize-theme">
+        <div class="card">
+            <h2>Customize your view</h2>
+            <p class="text-muted">Manage your font size, color, and background</p> 
+
+            <!--FONT SIZES-->
+            <div class="font-size">
+                <h4>Font Size</h4>
+                <div>
+                    <h6>Aa</h6>
+                    <div class="choose-size">
+                        <span class="font-size-1"></span>
+                        <span class="font-size-2"></span>
+                        <span class="font-size-3 active"></span>
+                        <span class="font-size-4"></span>
+                        <span class="font-size-5"></span>
+                    </div>
+                    <h3>Aa</h3>
+                </div>
+            </div>
+
+            <!--PRIMARY COLORS-->
+            <div class="color">
+                <h4>Color</h4>
+                <div class="choose-color">
+                    <span class="color-1 active"></span>
+                    <span class="color-2"></span>
+                    <span class="color-3"></span>
+                    <span class="color-4"></span>
+                    <span class="color-5"></span>
+                </div>
+            </div>
+
+            <!--BACKGROUND COLORS-->
+            <div class="background">
+                <h4>Background</h4>
+                <div class="choose-bg">
+                    <div class="bg-1 active">
+                        <span></span>
+                        <h5 for="bg-1">Light</h5>
+                    </div>
+                    <div class="bg-2">
+                        <span></span>
+                        <h5 for="bg-2">Dim</h5>
+                    </div>
+                    <div class="bg-3">
+                        <span></span>
+                        <h5 for="bg-3">Lights Out</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% block jsfiles %}
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script>
+	$(".like").click(function (e) {
+    var id = this.id;
+    var href = $('.like').find('a').attr('href');
+    e.preventDefault();
+
+    $.ajax({
+        url: href,
+        data: {
+          'likeId': id
+        },
+        success: function(response){
+            $("#body").load("#body");
+        }
+      })
+});
+</script>
+<!-- Javascript Link -->
+<script type="text/javascript" src="{% static 'index.js' %}"></script>
+{% endblock jsfiles %}
+</body>
+</html>
+
+{% endblock content%}

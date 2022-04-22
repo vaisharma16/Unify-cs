@@ -1,0 +1,29 @@
+{% extends "users/navigation.html" %}
+
+{% load static %} 
+{% load crispy_forms_tags %}
+{% block cssfiles%}
+    <link rel="stylesheet" href="{% static 'list.css' %}">
+{% endblock cssfiles %}
+
+
+{% block content %}
+<div class="container">
+    {% for friend in friends %}
+    <div class="content">
+        <div class="header">
+            <div class="profile-image">
+                <a href="{% url 'profile_view' friend %}"><img src="{{ friend.image.url }}" alt=""></a>
+            </div>
+            <div class="username">
+                <a href="{% url 'profile_view' friend %}"><h3>{{ friend.user.first_name }} {{ friend.user.last_name }}</h3></a>
+                <a href="{% url 'profile_view' friend %}"><b>@{{ friend }}</b></a>
+            </div>
+        </div>
+        <div class="btn">
+            <a href="{% url 'delete_friend_list' friend.id %}">Remove Friend</a>
+        </div>
+    </div> 
+    {% endfor %}
+</div>
+{% endblock content %}
